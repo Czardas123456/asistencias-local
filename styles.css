@@ -864,6 +864,32 @@ textarea:focus {
   border-radius: 8px;
 }
 
+.support-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.support-steps article {
+  display: grid;
+  gap: 8px;
+  min-height: 120px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--soft);
+}
+
+.support-steps strong {
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.support-steps span {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
 @media (max-width: 820px) {
   .app-header,
   .intro-panel,
@@ -889,7 +915,8 @@ textarea:focus {
   }
 
   .field-grid.two,
-  .field-grid.three {
+  .field-grid.three,
+  .support-steps {
     grid-template-columns: 1fr;
   }
 
