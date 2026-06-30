@@ -27,6 +27,7 @@ const elements = {
 
 const dbNotice = document.querySelector("#dbNotice");
 const totalRecords = document.querySelector("#totalRecords");
+const missingTitle = document.querySelector("#missingTitle");
 const missingBox = document.querySelector("#missingBox");
 const missingList = document.querySelector("#missingList");
 const mediaPreview = document.querySelector("#mediaPreview");
@@ -39,6 +40,9 @@ const startSection = document.querySelector("#startSection");
 const caseWorkspace = document.querySelector("#caseWorkspace");
 const activeCaseLabel = document.querySelector("#activeCaseLabel");
 const autosaveStatus = document.querySelector("#autosaveStatus");
+const stepNotice = document.querySelector("#stepNotice");
+const stepNoticeTitle = document.querySelector("#stepNoticeTitle");
+const stepNoticeText = document.querySelector("#stepNoticeText");
 const shotChecklist = document.querySelector("#shotChecklist");
 const flowSteps = Array.from(document.querySelectorAll(".flow-steps li"));
 const wizardPanels = Array.from(document.querySelectorAll("[data-wizard-step]"));
@@ -396,6 +400,7 @@ function setWizardStep(stepIndex) {
     step.classList.toggle("is-done", active && index < currentWizardStep);
   });
   renderGuidedShot();
+  renderStepNotice();
 }
 
 function setWorkspaceVisible(visible, stepIndex = 1) {
@@ -410,6 +415,7 @@ function setWorkspaceVisible(visible, stepIndex = 1) {
       step.classList.toggle("is-current", index === 0);
       step.classList.remove("is-done");
     });
+    stepNotice.hidden = true;
     renderGuidedShot();
     return;
   }
@@ -439,11 +445,23 @@ function findByIdentity(assistanceNumber, plate) {
   });
 }
 
-function getMissing(record = readForm()) {
-  const hasMediaEvidence = (record.evidence || []).some((item) => {
-    const type = item.type || "";
-    return type.startsWith("image/") || type.startsWith("video/");
-  });
+function isShotCompleteInEvidence(evidence = [], shot) {
+  return evidence.some((item) => item.shotId === shot.id || item.shot === shot.title);
+}
+
+function getPhotoProgress(record = readForm()) {
+  const evidence = record.evidence || [];
+  const completed = REQUIRED_SHOTS.filter((shot) => isShotCompleteInEvidence(evidence, shot)).length;
+  const firstMissingIndex = REQUIRED_SHOTS.findIndex((shot) => !isShotCompleteInEvidence(evidence, shot));
+  return {
+    completed,
+    total: REQUIRED_SHOTS.length,
+    complete: completed === REQUIRED_SHOTS.length,
+    firstMissingIndex: firstMissingIndex >= 0 ? firstMissingIndex : REQUIRED_SHOTS.length - 1,
+  };
+}
+
+function getDetailMissing(record = readForm()) {
   const checks = [
     ["Tipo de servicio", record.serviceType],
     ["Fecha y hora", record.serviceDate],
@@ -451,10 +469,60 @@ function getMissing(record = readForm()) {
     ["Direccion / ubicacion", record.location],
     ["Prestador / responsable", record.provider],
     ["Descripcion del servicio", record.description],
-    ["Fotos o video", hasMediaEvidence],
   ];
 
   return checks.filter(([, value]) => !value).map(([label]) => label);
+}
+
+function getMissing(record = readForm()) {
+  const photoProgress = getPhotoProgress(record);
+  const missing = [];
+  if (!photoProgress.complete) {
+    missing.push(`Fotos obligatorias (${photoProgress.completed}/${photoProgress.total})`);
+  }
+  return missing.concat(getDetailMissing(record));
+}
+
+function getNextIncompleteStep(record = readForm()) {
+  return getPhotoProgress(record).complete ? 2 : 1;
+}
+
+function getResumeMessage(record = readForm()) {
+  const photoProgress = getPhotoProgress(record);
+  const remainingPhotos = photoProgress.total - photoProgress.completed;
+  const detailMissing = getDetailMissing(record);
+
+  if (!photoProgress.complete) {
+    const shot = REQUIRED_SHOTS[photoProgress.firstMissingIndex];
+    return `Faltan ${remainingPhotos} foto${remainingPhotos === 1 ? "" : "s"}. Continua con: ${shot.title}.`;
+  }
+
+  if (detailMissing.length) {
+    const visible = detailMissing.slice(0, 3).join(", ");
+    const extra = detailMissing.length > 3 ? ` y ${detailMissing.length - 3} mas` : "";
+    return `Fotos completas. Falta completar: ${visible}${extra}.`;
+  }
+
+  return "Caso completo. Puedes revisarlo o iniciar un nuevo registro.";
+}
+
+function focusNextPending(record = readForm()) {
+  const photoProgress = getPhotoProgress(record);
+  if (!photoProgress.complete) {
+    vehicleMask.focus();
+    return;
+  }
+
+  const fieldByMissing = {
+    "Tipo de servicio": elements.serviceType,
+    "Fecha y hora": elements.serviceDate,
+    Ciudad: elements.city,
+    "Direccion / ubicacion": elements.location,
+    "Prestador / responsable": elements.provider,
+    "Descripcion del servicio": elements.description,
+  };
+  const firstMissing = getDetailMissing(record)[0];
+  (fieldByMissing[firstMissing] || elements.serviceType).focus();
 }
 
 function setStatusFromMissing(record) {
@@ -481,7 +549,7 @@ function readForm() {
   };
 }
 
-function writeForm(record, stepIndex = 1) {
+function writeForm(record, stepIndex = null) {
   elements.recordId.value = record.id || "";
   elements.assistanceNumber.value = record.assistanceNumber || "";
   elements.plate.value = record.plate || "";
@@ -494,10 +562,13 @@ function writeForm(record, stepIndex = 1) {
   elements.contact.value = record.contact || "";
   elements.description.value = record.description || "";
   currentEvidence = record.evidence || [];
-  setWorkspaceVisible(Boolean(record.id), stepIndex);
+  const photoProgress = getPhotoProgress(record);
+  currentShotIndex = photoProgress.firstMissingIndex;
+  setWorkspaceVisible(Boolean(record.id), stepIndex ?? getNextIncompleteStep(record));
   updateActiveCaseLabel();
   renderEvidence();
   renderMissing();
+  renderStepNotice();
 }
 
 function validateRequired() {
@@ -545,11 +616,44 @@ function renderMissing() {
     li.textContent = item;
     missingList.append(li);
   });
+  missingTitle.textContent = missing.length ? "Falta para cerrar el caso" : "Caso completo";
   missingBox.hidden = missing.length === 0;
+  renderStepNotice();
+}
+
+function renderStepNotice() {
+  if (!hasActiveCase()) {
+    stepNotice.hidden = true;
+    return;
+  }
+
+  const record = readForm();
+  const photoProgress = getPhotoProgress(record);
+  const detailMissing = getDetailMissing(record);
+  stepNotice.hidden = false;
+
+  if (!photoProgress.complete) {
+    const remaining = photoProgress.total - photoProgress.completed;
+    stepNotice.dataset.tone = "warning";
+    stepNoticeTitle.textContent = "Siguiente paso: fotos";
+    stepNoticeText.textContent = `Faltan ${remaining} foto${remaining === 1 ? "" : "s"} guiada${remaining === 1 ? "" : "s"}. Toma ahora: ${REQUIRED_SHOTS[photoProgress.firstMissingIndex].title}.`;
+    return;
+  }
+
+  if (detailMissing.length) {
+    stepNotice.dataset.tone = "warning";
+    stepNoticeTitle.textContent = "Siguiente paso: informacion";
+    stepNoticeText.textContent = `Las fotos estan completas. Completa: ${detailMissing.join(", ")}.`;
+    return;
+  }
+
+  stepNotice.dataset.tone = "success";
+  stepNoticeTitle.textContent = "Caso completo";
+  stepNoticeText.textContent = "La asistencia tiene fotos y datos principales completos.";
 }
 
 function isShotComplete(shot) {
-  return currentEvidence.some((item) => item.shotId === shot.id || item.shot === shot.title);
+  return isShotCompleteInEvidence(currentEvidence, shot);
 }
 
 function getCompletedRequiredShots() {
@@ -577,7 +681,7 @@ function renderGuidedShot() {
   vehicleGuideImage.alt = `Guia visual: ${shot.title}`;
   angleBadge.textContent = shot.badge;
   prevShot.disabled = currentShotIndex === 0;
-  nextShot.textContent = currentShotIndex === REQUIRED_SHOTS.length - 1 ? "Complementar datos" : "Siguiente vista";
+  nextShot.textContent = currentShotIndex === REQUIRED_SHOTS.length - 1 ? "Completar informacion" : "Siguiente foto";
   updateCaptureChrome();
 }
 
@@ -824,7 +928,11 @@ function renderRecords() {
     meta.className = "record-meta";
     const date = record.serviceDate ? new Date(record.serviceDate).toLocaleString("es-CO") : "Sin fecha";
     meta.textContent = `${record.serviceType || "Sin tipo"} · ${date} · ${record.evidence?.length || 0} evidencia(s)`;
-    content.append(title, meta);
+
+    const hint = document.createElement("div");
+    hint.className = "record-hint";
+    hint.textContent = getResumeMessage(record);
+    content.append(title, meta, hint);
 
     const actions = document.createElement("div");
     actions.className = "record-actions";
@@ -832,12 +940,12 @@ function renderRecords() {
     const open = document.createElement("button");
     open.className = "button";
     open.type = "button";
-    open.textContent = "Abrir";
+    open.textContent = missing.length ? "Continuar" : "Revisar";
     open.addEventListener("click", () => {
-      writeForm(record, 2);
+      writeForm(record, getNextIncompleteStep(record));
       switchView("registro");
-      setAutosaveStatus("Caso abierto para complementar.", "success");
-      elements.serviceType.focus();
+      setAutosaveStatus(getResumeMessage(record), missing.length ? "saving" : "success");
+      focusNextPending(record);
     });
 
     const remove = document.createElement("button");
@@ -905,6 +1013,7 @@ async function persistActiveCase(successMessage = "Cambios guardados.") {
     await saveRecord(record);
     await refreshRecords();
     updateActiveCaseLabel();
+    renderStepNotice();
     setAutosaveStatus(successMessage, "success");
   } catch (error) {
     setAutosaveStatus("No se pudo guardar.", "error");
@@ -931,8 +1040,9 @@ async function startCase() {
 
   const existing = findByIdentity(elements.assistanceNumber.value, elements.plate.value);
   if (existing) {
-    writeForm(existing, 1);
-    setAutosaveStatus("Caso existente abierto para complementar.", "success");
+    writeForm(existing, getNextIncompleteStep(existing));
+    setAutosaveStatus(getResumeMessage(existing), "success");
+    focusNextPending(existing);
     return;
   }
 

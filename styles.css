@@ -298,6 +298,36 @@ p {
   font-size: 1.1rem;
 }
 
+.step-notice {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid #fedf89;
+  border-radius: 8px;
+  background: #fffbeb;
+}
+
+.step-notice strong {
+  color: #93370d;
+  font-size: 0.9rem;
+}
+
+.step-notice span {
+  color: #6f4e00;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.step-notice[data-tone="success"] {
+  background: #ecfdf3;
+  border-color: #abefc6;
+}
+
+.step-notice[data-tone="success"] strong,
+.step-notice[data-tone="success"] span {
+  color: var(--success);
+}
+
 #autosaveStatus[data-tone="success"] {
   color: #bcf7d3;
 }
@@ -846,6 +876,14 @@ textarea:focus {
 .record-meta {
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.record-hint {
+  margin-top: 6px;
+  color: #344054;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.4;
 }
 
 .record-actions {

@@ -84,7 +84,7 @@
               </label>
             </div>
             <div class="form-actions start-actions">
-              <button class="button" type="button" id="continueCase">Continuar</button>
+              <button class="button" type="button" id="continueCase">Crear caso y tomar fotos</button>
             </div>
           </fieldset>
 
@@ -95,6 +95,11 @@
                 <strong id="activeCaseLabel">Sin asistencia seleccionada</strong>
               </div>
               <small id="autosaveStatus">Listo para capturar evidencias</small>
+            </section>
+
+            <section class="step-notice" id="stepNotice" aria-live="polite" hidden>
+              <strong id="stepNoticeTitle">Siguiente paso</strong>
+              <span id="stepNoticeText">Completa la informacion pendiente para cerrar el caso.</span>
             </section>
 
             <div class="wizard-panel" id="photosStep" data-wizard-step="photos">
@@ -123,7 +128,7 @@
                         <input id="guidedPhotoInput" type="file" accept="image/*" capture="environment">
                         <span>Tomar foto</span>
                       </label>
-                      <button class="button secondary light-action" type="button" id="nextShot">Siguiente vista</button>
+                      <button class="button secondary light-action" type="button" id="nextShot">Siguiente foto</button>
                     </div>
                     <label class="upload-action secondary compact-upload quiet-upload">
                       <input id="fileInput" type="file" accept="image/*" multiple>
@@ -153,7 +158,7 @@
                 <legend>Evidencias cargadas</legend>
                 <div class="media-meta">
                   <span id="evidenceCount">Sin evidencias cargadas</span>
-                  <button class="text-button" id="clearEvidence" type="button">Limpiar evidencias</button>
+                  <button class="text-button" id="clearEvidence" type="button">Quitar evidencias</button>
                 </div>
                 <div class="media-grid" id="mediaPreview" aria-live="polite"></div>
               </fieldset>
@@ -228,14 +233,14 @@
               </fieldset>
 
               <section class="missing-box" id="missingBox" aria-live="polite">
-                <strong>Informacion pendiente</strong>
+                <strong id="missingTitle">Informacion pendiente</strong>
                 <ul id="missingList"></ul>
               </section>
 
               <div class="form-actions step-actions">
                 <button class="button secondary text-like-action" type="button" id="backToPhotos">Volver a fotos</button>
                 <button class="button secondary text-like-action" type="button" id="resetForm">Nuevo registro</button>
-                <button class="button" type="submit">Guardar asistencia</button>
+                <button class="button" type="submit">Guardar caso</button>
               </div>
             </div>
           </div>
@@ -250,8 +255,8 @@
             <p>Busca un registro guardado, abre el caso y completa los campos pendientes sin perder las evidencias tomadas.</p>
           </div>
           <div class="header-actions">
-            <button class="button secondary" type="button" id="exportAll">Exportar resumen</button>
-            <button class="button secondary text-like-action danger-action" type="button" id="clearAllData">Borrar datos locales</button>
+            <button class="button secondary text-like-action" type="button" id="exportAll">Exportar</button>
+            <button class="button secondary text-like-action danger-action" type="button" id="clearAllData">Borrar datos</button>
           </div>
         </div>
 
