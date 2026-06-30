@@ -948,18 +948,7 @@ function renderRecords() {
       focusNextPending(record);
     });
 
-    const remove = document.createElement("button");
-    remove.className = "button secondary text-like-action danger-action";
-    remove.type = "button";
-    remove.textContent = "Eliminar";
-    remove.addEventListener("click", async () => {
-      const ok = window.confirm(`Eliminar la asistencia ${record.assistanceNumber} (${record.plate})?`);
-      if (!ok) return;
-      await deleteRecord(record.id);
-      await refreshRecords();
-    });
-
-    actions.append(open, remove);
+    actions.append(open);
     card.append(content, actions);
     recordsList.append(card);
   });
