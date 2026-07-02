@@ -134,6 +134,11 @@ function focusMissingIdentity() {
   target.closest(".field").scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
+function setDetailsVisible(visible) {
+  detailsPanel.hidden = !visible;
+  goDetails.setAttribute("aria-expanded", String(visible));
+}
+
 function readRecord() {
   const now = new Date().toISOString();
   const existing = currentId ? savedRecords.find((record) => record.id === currentId) : findCurrentRecord();
@@ -169,6 +174,7 @@ function writeRecord(record) {
   moveToNextMissingPhoto();
   updateCaseLabel();
   renderImages();
+  setDetailsVisible(false);
 }
 
 function updateCaseLabel() {
@@ -415,6 +421,7 @@ goDetails.addEventListener("click", () => {
     focusMissingIdentity();
     return;
   }
+  setDetailsVisible(true);
   scheduleSave("Caso creado. Completa los datos faltantes.");
   detailsPanel.scrollIntoView({ behavior: "smooth", block: "start" });
   serviceType.focus();

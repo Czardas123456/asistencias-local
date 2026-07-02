@@ -64,7 +64,7 @@
               <input id="galleryInput" type="file" accept="image/*" multiple>
               <span>Cargar imagenes</span>
             </label>
-            <button class="button secondary" id="goDetails" type="button">Completar datos</button>
+            <button class="button secondary" id="goDetails" type="button" aria-controls="detailsPanel" aria-expanded="false">Completar datos</button>
           </div>
 
           <section class="thumb-section" aria-labelledby="thumbTitle">
@@ -76,7 +76,7 @@
             <div class="thumb-grid" id="thumbGrid" aria-live="polite"></div>
           </section>
 
-          <section class="details-section" id="detailsPanel" aria-labelledby="detailsTitle">
+          <section class="details-section" id="detailsPanel" aria-labelledby="detailsTitle" hidden>
             <div class="thumb-header">
               <h3 id="detailsTitle">Completar datos</h3>
               <span id="detailsStatus">Autoguardado</span>
