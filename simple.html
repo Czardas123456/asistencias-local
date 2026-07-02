@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data: blob:; media-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+    <title>Registro simple de asistencias</title>
+    <link rel="stylesheet" href="simple.css">
+    <script defer src="simple.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <img src="assets/mapfre-logo.svg" alt="MAPFRE">
+        <div>
+          <span>Version simple</span>
+          <h1>Registro de evidencias</h1>
+        </div>
+      </div>
+      <button class="button consult-button" type="button" id="showSearch">Consulta</button>
+    </header>
+
+    <main class="shell">
+      <section class="status" id="status" role="status">Ingresa asistencia y placa para empezar.</section>
+
+      <section class="workspace">
+        <form class="panel capture-panel" id="caseForm" novalidate>
+          <div class="panel-title">
+            <div>
+              <p class="eyebrow">Registro rapido</p>
+              <h2>Datos y fotos en una sola pantalla</h2>
+            </div>
+            <strong id="activeCase">Sin caso activo</strong>
+          </div>
+
+          <div class="identity-grid">
+            <label class="field">
+              <span>Numero de asistencia *</span>
+              <input id="assistanceNumber" autocomplete="off" placeholder="Ej. 2189-000123" required>
+              <small data-error-for="assistanceNumber"></small>
+            </label>
+            <label class="field">
+              <span>Placa *</span>
+              <input id="plate" autocomplete="off" maxlength="10" placeholder="Ej. ABC123" required>
+              <small data-error-for="plate"></small>
+            </label>
+          </div>
+
+          <div class="quick-actions">
+            <label class="button camera-action">
+              <input id="photoInput" type="file" accept="image/*" capture="environment" multiple>
+              <span>Tomar foto</span>
+            </label>
+            <label class="button secondary camera-action">
+              <input id="galleryInput" type="file" accept="image/*" multiple>
+              <span>Cargar imagenes</span>
+            </label>
+            <button class="button secondary" id="saveCase" type="submit">Guardar</button>
+          </div>
+
+          <label class="field">
+            <span>Observaciones</span>
+            <textarea id="notes" rows="3" placeholder="Opcional: daño, ubicacion, responsable o comentario breve."></textarea>
+          </label>
+
+          <section class="thumb-section" aria-labelledby="thumbTitle">
+            <div class="thumb-header">
+              <h3 id="thumbTitle">Imagenes cargadas</h3>
+              <span id="imageCount">0 imagenes</span>
+            </div>
+            <div class="empty-grid" id="emptyGrid">Aun no hay imagenes. Toca Tomar foto o Cargar imagenes.</div>
+            <div class="thumb-grid" id="thumbGrid" aria-live="polite"></div>
+          </section>
+        </form>
+
+        <aside class="panel search-panel" id="searchPanel">
+          <div class="panel-title compact">
+            <div>
+              <p class="eyebrow">Consulta</p>
+              <h2>Buscar caso</h2>
+            </div>
+          </div>
+          <label class="field">
+            <span>Asistencia o placa</span>
+            <input id="searchQuery" placeholder="Buscar">
+          </label>
+          <div class="records" id="records"></div>
+        </aside>
+      </section>
+    </main>
+  </body>
+</html>
