@@ -46,6 +46,15 @@
             </label>
           </div>
 
+          <section class="photo-guide" aria-labelledby="currentPhotoTitle">
+            <div class="current-photo">
+              <span>Foto actual</span>
+              <strong id="currentPhotoTitle">Frente / lateral izquierdo</strong>
+              <small id="photoProgress">Faltan 8 fotos</small>
+            </div>
+            <div class="photo-checklist" id="photoChecklist" aria-label="Fotos requeridas"></div>
+          </section>
+
           <div class="quick-actions">
             <label class="button camera-action">
               <input id="photoInput" type="file" accept="image/*" capture="environment" multiple>

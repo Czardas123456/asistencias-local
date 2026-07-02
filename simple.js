@@ -11,6 +11,9 @@ const plate = document.querySelector("#plate");
 const notes = document.querySelector("#notes");
 const photoInput = document.querySelector("#photoInput");
 const galleryInput = document.querySelector("#galleryInput");
+const currentPhotoTitle = document.querySelector("#currentPhotoTitle");
+const photoProgress = document.querySelector("#photoProgress");
+const photoChecklist = document.querySelector("#photoChecklist");
 const thumbGrid = document.querySelector("#thumbGrid");
 const emptyGrid = document.querySelector("#emptyGrid");
 const imageCount = document.querySelector("#imageCount");
@@ -26,6 +29,18 @@ let savedRecords = [];
 let currentId = "";
 let images = [];
 let saveTimer;
+let currentPhotoIndex = 0;
+
+const REQUIRED_PHOTOS = [
+  { id: "front-left", title: "Frente / lateral izquierdo" },
+  { id: "front-right", title: "Frente / lateral derecho" },
+  { id: "rear-right", title: "Trasera / lateral derecho" },
+  { id: "rear-left", title: "Trasera / lateral izquierdo" },
+  { id: "plate", title: "Placa o VIN" },
+  { id: "main-damage", title: "Dano principal" },
+  { id: "damage-detail", title: "Detalle del dano" },
+  { id: "environment", title: "Entorno del evento" },
+];
 
 function normalize(value) {
   return String(value || "").trim();
@@ -123,6 +138,7 @@ function writeRecord(record) {
   plate.value = record.plate || "";
   notes.value = record.notes || "";
   images = record.images || [];
+  moveToNextMissingPhoto();
   updateCaseLabel();
   renderImages();
 }
@@ -137,6 +153,7 @@ function renderImages() {
   thumbGrid.innerHTML = "";
   imageCount.textContent = `${images.length} imagen${images.length === 1 ? "" : "es"}`;
   emptyGrid.hidden = images.length > 0;
+  renderPhotoGuide();
 
   images.forEach((item) => {
     const card = document.createElement("article");
@@ -148,6 +165,9 @@ function renderImages() {
     img.alt = item.name || "Evidencia";
     img.onload = () => URL.revokeObjectURL(url);
     img.onerror = () => URL.revokeObjectURL(url);
+
+    const photoLabel = document.createElement("strong");
+    photoLabel.textContent = item.photoTitle || "Foto adicional";
 
     const name = document.createElement("span");
     name.textContent = item.name || "Imagen";
@@ -161,8 +181,57 @@ function renderImages() {
       scheduleSave("Imagen retirada.");
     });
 
-    card.append(img, name, remove);
+    card.append(img, photoLabel, name, remove);
     thumbGrid.append(card);
+  });
+}
+
+function isPhotoComplete(photo) {
+  return images.some((image) => image.photoId === photo.id);
+}
+
+function getPhotoSummary() {
+  const completed = REQUIRED_PHOTOS.filter(isPhotoComplete).length;
+  const nextMissingIndex = REQUIRED_PHOTOS.findIndex((photo) => !isPhotoComplete(photo));
+  return {
+    completed,
+    total: REQUIRED_PHOTOS.length,
+    remaining: REQUIRED_PHOTOS.length - completed,
+    nextMissingIndex: nextMissingIndex >= 0 ? nextMissingIndex : REQUIRED_PHOTOS.length - 1,
+  };
+}
+
+function moveToNextMissingPhoto() {
+  currentPhotoIndex = getPhotoSummary().nextMissingIndex;
+}
+
+function renderPhotoGuide() {
+  const summary = getPhotoSummary();
+  const currentPhoto = REQUIRED_PHOTOS[currentPhotoIndex] || REQUIRED_PHOTOS[0];
+  currentPhotoTitle.textContent = currentPhoto.title;
+  photoProgress.textContent = summary.remaining
+    ? `Faltan ${summary.remaining} de ${summary.total} fotos`
+    : "Fotos requeridas completas";
+
+  photoChecklist.innerHTML = "";
+  REQUIRED_PHOTOS.forEach((photo, index) => {
+    const done = isPhotoComplete(photo);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `photo-step ${done ? "is-done" : ""} ${index === currentPhotoIndex ? "is-current" : ""}`;
+
+    const marker = document.createElement("span");
+    marker.textContent = done ? "OK" : String(index + 1).padStart(2, "0");
+
+    const label = document.createElement("strong");
+    label.textContent = photo.title;
+
+    button.append(marker, label);
+    button.addEventListener("click", () => {
+      currentPhotoIndex = index;
+      renderPhotoGuide();
+    });
+    photoChecklist.append(button);
   });
 }
 
@@ -205,17 +274,28 @@ async function addImages(fileList) {
   if (rejected.length) alert(`No se cargaron algunas imagenes:\n${rejected.join("\n")}`);
   if (!accepted.length) return;
 
-  images = images.concat(accepted.map((file) => ({
-    id: createId(),
-    name: file.name || `imagen-${new Date().toISOString()}.jpg`,
-    type: file.type,
-    size: file.size,
-    lastModified: file.lastModified,
-    blob: file,
-  })));
+  const mapped = accepted.map((file) => {
+    const photo = REQUIRED_PHOTOS[currentPhotoIndex] || REQUIRED_PHOTOS[0];
+    const item = {
+      id: createId(),
+      name: file.name || `imagen-${new Date().toISOString()}.jpg`,
+      type: file.type,
+      size: file.size,
+      lastModified: file.lastModified,
+      photoId: photo.id,
+      photoTitle: photo.title,
+      blob: file,
+    };
+
+    images = images.concat(item);
+    moveToNextMissingPhoto();
+    return item;
+  });
 
   renderImages();
-  await persistCase(`${accepted.length} imagen${accepted.length === 1 ? "" : "es"} guardada${accepted.length === 1 ? "" : "s"}.`);
+  const summary = getPhotoSummary();
+  const nextText = summary.remaining ? ` Siguiente: ${currentPhotoTitle.textContent}.` : " Fotos requeridas completas.";
+  await persistCase(`${mapped.length} imagen${mapped.length === 1 ? "" : "es"} guardada${mapped.length === 1 ? "" : "s"}.${nextText}`);
 }
 
 async function refreshRecords() {
@@ -319,6 +399,7 @@ openDatabase()
     return refreshRecords();
   })
   .then(() => {
+    renderImages();
     setStatus("Lista para registrar imagenes.");
   })
   .catch((error) => {

@@ -222,6 +222,93 @@ textarea:focus {
   font-weight: 850;
 }
 
+.photo-guide {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  background: #fffbeb;
+  border: 1px solid #fedf89;
+  border-radius: 8px;
+}
+
+.current-photo {
+  display: grid;
+  gap: 3px;
+}
+
+.current-photo span {
+  color: var(--warning);
+  font-size: 0.76rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.current-photo strong {
+  font-size: 1.1rem;
+}
+
+.current-photo small {
+  color: #6f4e00;
+  font-weight: 800;
+}
+
+.photo-checklist {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.photo-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 10px;
+  color: #344054;
+  background: #fff;
+  border: 1px solid #eadfb5;
+  border-radius: 8px;
+  text-align: left;
+  font-size: 0.82rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.photo-step span {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  color: var(--warning);
+  background: #fff7d6;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  flex: 0 0 auto;
+}
+
+.photo-step.is-current {
+  color: #fff;
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+.photo-step.is-current span {
+  color: var(--brand);
+  background: #fff;
+}
+
+.photo-step.is-done {
+  color: var(--success);
+  background: #ecfdf3;
+  border-color: #abefc6;
+}
+
+.photo-step.is-done span {
+  color: #fff;
+  background: var(--success);
+}
+
 .quick-actions {
   display: grid;
   grid-template-columns: minmax(180px, 1.4fr) minmax(150px, 1fr) auto;
@@ -332,6 +419,11 @@ textarea:focus {
   font-size: 0.78rem;
   font-weight: 750;
   overflow-wrap: anywhere;
+}
+
+.thumb-card strong {
+  color: var(--ink);
+  font-size: 0.84rem;
 }
 
 .thumb-card button {
