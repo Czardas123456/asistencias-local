@@ -8,7 +8,16 @@ const MAX_IMAGES = 60;
 const form = document.querySelector("#caseForm");
 const assistanceNumber = document.querySelector("#assistanceNumber");
 const plate = document.querySelector("#plate");
+const serviceType = document.querySelector("#serviceType");
+const serviceDate = document.querySelector("#serviceDate");
+const city = document.querySelector("#city");
+const locationInput = document.querySelector("#location");
+const provider = document.querySelector("#provider");
+const contact = document.querySelector("#contact");
 const notes = document.querySelector("#notes");
+const goDetails = document.querySelector("#goDetails");
+const detailsPanel = document.querySelector("#detailsPanel");
+const detailsStatus = document.querySelector("#detailsStatus");
 const photoInput = document.querySelector("#photoInput");
 const galleryInput = document.querySelector("#galleryInput");
 const currentPhotoTitle = document.querySelector("#currentPhotoTitle");
@@ -118,6 +127,13 @@ function validateIdentity() {
   return valid;
 }
 
+function focusMissingIdentity() {
+  const target = !normalize(assistanceNumber.value) ? assistanceNumber : (!normalize(plate.value) ? plate : null);
+  if (!target) return;
+  target.focus();
+  target.closest(".field").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
 function readRecord() {
   const now = new Date().toISOString();
   const existing = currentId ? savedRecords.find((record) => record.id === currentId) : findCurrentRecord();
@@ -125,6 +141,12 @@ function readRecord() {
     id: existing?.id || currentId || createId(),
     assistanceNumber: normalize(assistanceNumber.value),
     plate: normalizePlate(plate.value),
+    serviceType: normalize(serviceType.value),
+    serviceDate: normalize(serviceDate.value),
+    city: normalize(city.value),
+    location: normalize(locationInput.value),
+    provider: normalize(provider.value),
+    contact: normalize(contact.value),
     notes: normalize(notes.value),
     images,
     createdAt: existing?.createdAt || now,
@@ -136,6 +158,12 @@ function writeRecord(record) {
   currentId = record.id;
   assistanceNumber.value = record.assistanceNumber || "";
   plate.value = record.plate || "";
+  serviceType.value = record.serviceType || "";
+  serviceDate.value = record.serviceDate || "";
+  city.value = record.city || "";
+  locationInput.value = record.location || "";
+  provider.value = record.provider || "";
+  contact.value = record.contact || "";
   notes.value = record.notes || "";
   images = record.images || [];
   moveToNextMissingPhoto();
@@ -267,6 +295,7 @@ function validateFiles(files) {
 async function addImages(fileList) {
   if (!validateIdentity()) {
     setStatus("Primero ingresa asistencia y placa.", "error");
+    focusMissingIdentity();
     return;
   }
 
@@ -310,11 +339,13 @@ async function persistCase(message = "Caso guardado.") {
   await saveRecord(record);
   await refreshRecords();
   updateCaseLabel();
+  detailsStatus.textContent = "Guardado";
   setStatus(message, "success");
 }
 
 function scheduleSave(message = "Cambios guardados.") {
   if (!normalize(assistanceNumber.value) || !normalize(plate.value)) return;
+  detailsStatus.textContent = "Guardando...";
   window.clearTimeout(saveTimer);
   saveTimer = window.setTimeout(() => persistCase(message), 350);
 }
@@ -346,7 +377,7 @@ function renderRecords() {
 
     const meta = document.createElement("span");
     const updated = record.updatedAt ? new Date(record.updatedAt).toLocaleString("es-CO") : "Sin fecha";
-    meta.textContent = `${record.images?.length || 0} imagenes · ${updated}`;
+    meta.textContent = `${record.images?.length || 0} imagenes · ${record.city || "Sin ciudad"} · ${updated}`;
 
     const open = document.createElement("button");
     open.className = "button";
@@ -378,13 +409,24 @@ form.addEventListener("submit", async (event) => {
   await persistCase("Caso guardado.");
 });
 
+goDetails.addEventListener("click", () => {
+  if (!validateIdentity()) {
+    setStatus("Primero ingresa asistencia y placa.", "error");
+    focusMissingIdentity();
+    return;
+  }
+  scheduleSave("Caso creado. Completa los datos faltantes.");
+  detailsPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+  serviceType.focus();
+});
+
 searchQuery.addEventListener("input", renderRecords);
 showSearch.addEventListener("click", () => {
   searchPanel.scrollIntoView({ behavior: "smooth", block: "start" });
   searchQuery.focus();
 });
 
-[assistanceNumber, plate, notes].forEach((input) => {
+[assistanceNumber, plate, serviceType, serviceDate, city, locationInput, provider, contact, notes].forEach((input) => {
   input.addEventListener("input", () => {
     if (input === plate) plate.value = normalizePlate(plate.value);
     validateIdentity();

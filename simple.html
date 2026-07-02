@@ -64,13 +64,8 @@
               <input id="galleryInput" type="file" accept="image/*" multiple>
               <span>Cargar imagenes</span>
             </label>
-            <button class="button secondary" id="saveCase" type="submit">Guardar</button>
+            <button class="button secondary" id="goDetails" type="button">Completar datos</button>
           </div>
-
-          <label class="field">
-            <span>Observaciones</span>
-            <textarea id="notes" rows="3" placeholder="Opcional: daño, ubicacion, responsable o comentario breve."></textarea>
-          </label>
 
           <section class="thumb-section" aria-labelledby="thumbTitle">
             <div class="thumb-header">
@@ -79,6 +74,43 @@
             </div>
             <div class="empty-grid" id="emptyGrid">Aun no hay imagenes. Toca Tomar foto o Cargar imagenes.</div>
             <div class="thumb-grid" id="thumbGrid" aria-live="polite"></div>
+          </section>
+
+          <section class="details-section" id="detailsPanel" aria-labelledby="detailsTitle">
+            <div class="thumb-header">
+              <h3 id="detailsTitle">Completar datos</h3>
+              <span id="detailsStatus">Autoguardado</span>
+            </div>
+            <div class="details-grid">
+              <label class="field">
+                <span>Tipo de servicio</span>
+                <input id="serviceType" placeholder="Abogado, grua o ambos">
+              </label>
+              <label class="field">
+                <span>Fecha y hora</span>
+                <input id="serviceDate" type="datetime-local">
+              </label>
+              <label class="field">
+                <span>Ciudad</span>
+                <input id="city" placeholder="Ciudad de la atencion">
+              </label>
+              <label class="field">
+                <span>Ubicacion</span>
+                <input id="location" placeholder="Direccion o referencia">
+              </label>
+              <label class="field">
+                <span>Responsable</span>
+                <input id="provider" placeholder="Analista, abogado, grua o aliado">
+              </label>
+              <label class="field">
+                <span>Contacto</span>
+                <input id="contact" placeholder="Telefono o correo">
+              </label>
+            </div>
+            <label class="field">
+              <span>Observaciones</span>
+              <textarea id="notes" rows="3" placeholder="Dano, entorno, documentos pendientes o comentario breve."></textarea>
+            </label>
           </section>
         </form>
 
