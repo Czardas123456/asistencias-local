@@ -124,7 +124,7 @@ h3 {
 }
 
 .timeline {
-  --progress-color: var(--brand);
+  --progress-color: var(--warning);
   display: grid;
   gap: 10px;
   margin-bottom: 14px;
@@ -132,10 +132,6 @@ h3 {
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 8px;
-}
-
-.timeline[data-tone="mid"] {
-  --progress-color: var(--warning);
 }
 
 .timeline[data-tone="done"] {
