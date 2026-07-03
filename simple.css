@@ -124,6 +124,8 @@ h3 {
 }
 
 .timeline {
+  --progress-start: #ffd400;
+  --progress-end: var(--success);
   --progress-color: var(--warning);
   display: grid;
   gap: 10px;
@@ -166,7 +168,7 @@ h3 {
   display: block;
   width: 0%;
   height: 100%;
-  background: var(--progress-color);
+  background: linear-gradient(90deg, var(--progress-start) 0%, var(--progress-end) 100%);
   border-radius: inherit;
   transition: width 180ms ease, background-color 180ms ease;
 }
