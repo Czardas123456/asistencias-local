@@ -243,18 +243,17 @@ function updateTimeline() {
   const detailsSummary = getDetailsSummary();
   const photoRatio = photoSummary.total ? photoSummary.completed / photoSummary.total : 0;
   const detailRatio = detailsSummary.total ? detailsSummary.completed / detailsSummary.total : 0;
-  const progress = Math.round((photoRatio * 70) + (detailRatio * 30));
+  const photosComplete = photoSummary.completed === photoSummary.total;
+  const detailsComplete = detailsSummary.completed === detailsSummary.total && detailsSummary.total > 0;
+  const progress = Math.round((photoRatio * 70) + (photosComplete ? detailRatio * 30 : 0));
   const tone = progress >= 85 ? "done" : (progress >= 45 ? "mid" : "start");
 
   progressTimeline.dataset.tone = tone;
   timelinePercent.textContent = `${progress}%`;
   timelineFill.style.width = `${progress}%`;
 
-  const photosComplete = photoSummary.completed === photoSummary.total;
-  const detailsComplete = detailsSummary.completed === detailsSummary.total && detailsSummary.total > 0;
-
   timelinePhotos.className = photosComplete ? "is-done" : "is-active";
-  timelineDetails.className = detailsComplete ? "is-done" : (photosComplete || detailsSummary.completed ? "is-active" : "");
+  timelineDetails.className = photosComplete ? (detailsComplete ? "is-done" : "is-active") : "";
   timelineDone.className = progress === 100 ? "is-done" : "";
 }
 

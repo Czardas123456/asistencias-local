@@ -142,8 +142,7 @@ h3 {
   --progress-color: var(--success);
 }
 
-.timeline-header,
-.timeline-steps {
+.timeline-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -178,11 +177,10 @@ h3 {
 
 .timeline-steps span {
   position: relative;
-  flex: 1;
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 850;
-  text-align: center;
+  text-align: left;
 }
 
 .timeline-steps span::before {
@@ -206,6 +204,31 @@ h3 {
 .timeline-steps span.is-active::before,
 .timeline-steps span.is-done::before {
   background: currentColor;
+}
+
+.timeline-steps {
+  position: relative;
+  min-height: 38px;
+}
+
+.timeline-steps span {
+  position: absolute;
+  top: 0;
+}
+
+#timelinePhotos {
+  left: 0;
+}
+
+#timelineDetails {
+  left: 70%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+#timelineDone {
+  right: 0;
+  text-align: right;
 }
 
 .workspace {
