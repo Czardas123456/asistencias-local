@@ -22,6 +22,20 @@
 
     <main class="shell">
       <section class="status" id="status" role="status">Ingresa asistencia y placa para empezar.</section>
+      <section class="timeline" id="progressTimeline" aria-label="Avance del caso" data-tone="start">
+        <div class="timeline-header">
+          <strong>Avance del caso</strong>
+          <span id="timelinePercent">0%</span>
+        </div>
+        <div class="timeline-bar" aria-hidden="true">
+          <span id="timelineFill"></span>
+        </div>
+        <div class="timeline-steps">
+          <span id="timelinePhotos">Fotos</span>
+          <span id="timelineDetails">Datos</span>
+          <span id="timelineDone">Completo</span>
+        </div>
+      </section>
 
       <section class="workspace">
         <form class="panel capture-panel" id="caseForm" novalidate>

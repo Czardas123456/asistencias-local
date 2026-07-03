@@ -31,6 +31,12 @@ const emptyGrid = document.querySelector("#emptyGrid");
 const imageCount = document.querySelector("#imageCount");
 const activeCase = document.querySelector("#activeCase");
 const statusBox = document.querySelector("#status");
+const progressTimeline = document.querySelector("#progressTimeline");
+const timelinePercent = document.querySelector("#timelinePercent");
+const timelineFill = document.querySelector("#timelineFill");
+const timelinePhotos = document.querySelector("#timelinePhotos");
+const timelineDetails = document.querySelector("#timelineDetails");
+const timelineDone = document.querySelector("#timelineDone");
 const searchPanel = document.querySelector("#searchPanel");
 const showSearch = document.querySelector("#showSearch");
 const backToCaptureFromDetails = document.querySelector("#backToCaptureFromDetails");
@@ -223,11 +229,41 @@ function updateCaseLabel() {
   activeCase.textContent = assistance && currentPlate ? `${assistance} · ${currentPlate}` : "Sin caso activo";
 }
 
+function getDetailsSummary() {
+  const fields = [serviceType, serviceDate, city, locationInput, provider, contact];
+  const completed = fields.filter((input) => normalize(input.value)).length;
+  return {
+    completed,
+    total: fields.length,
+  };
+}
+
+function updateTimeline() {
+  const photoSummary = getPhotoSummary();
+  const detailsSummary = getDetailsSummary();
+  const photoRatio = photoSummary.total ? photoSummary.completed / photoSummary.total : 0;
+  const detailRatio = detailsSummary.total ? detailsSummary.completed / detailsSummary.total : 0;
+  const progress = Math.round((photoRatio * 70) + (detailRatio * 30));
+  const tone = progress >= 85 ? "done" : (progress >= 45 ? "mid" : "start");
+
+  progressTimeline.dataset.tone = tone;
+  timelinePercent.textContent = `${progress}%`;
+  timelineFill.style.width = `${progress}%`;
+
+  const photosComplete = photoSummary.completed === photoSummary.total;
+  const detailsComplete = detailsSummary.completed === detailsSummary.total && detailsSummary.total > 0;
+
+  timelinePhotos.className = photosComplete ? "is-done" : "is-active";
+  timelineDetails.className = detailsComplete ? "is-done" : (photosComplete || detailsSummary.completed ? "is-active" : "");
+  timelineDone.className = progress === 100 ? "is-done" : "";
+}
+
 function renderImages() {
   thumbGrid.innerHTML = "";
   imageCount.textContent = `${images.length} imagen${images.length === 1 ? "" : "es"}`;
   emptyGrid.hidden = images.length > 0;
   renderPhotoGuide();
+  updateTimeline();
 
   images.forEach((item) => {
     const card = document.createElement("article");
@@ -495,6 +531,7 @@ backToCaptureFromSearch.addEventListener("click", () => {
     if (input === plate) plate.value = normalizePlate(plate.value);
     validateIdentity();
     updateCaseLabel();
+    updateTimeline();
     const preloaded = input === assistanceNumber || input === plate ? maybePreloadRecentRecord() : false;
     if (!preloaded) scheduleSave();
   });
