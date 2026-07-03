@@ -28,7 +28,7 @@
           <div class="panel-title">
             <div>
               <p class="eyebrow">Registro rapido</p>
-              <h2>Datos y fotos en una sola pantalla</h2>
+              <h2>Datos y fotos</h2>
             </div>
             <strong id="activeCase">Sin caso activo</strong>
           </div>
@@ -57,12 +57,12 @@
 
           <div class="quick-actions">
             <label class="button camera-action">
-              <input id="photoInput" type="file" accept="image/*" capture="environment" multiple>
+              <input id="photoInput" type="file" accept="image/*" capture="environment">
               <span>Tomar foto</span>
             </label>
             <label class="button secondary camera-action">
               <input id="galleryInput" type="file" accept="image/*" multiple>
-              <span>Cargar imagenes</span>
+              <span>Cargar de galeria</span>
             </label>
             <button class="button secondary" id="goDetails" type="button" aria-controls="detailsPanel" aria-expanded="false">Completar datos</button>
           </div>
@@ -72,54 +72,61 @@
               <h3 id="thumbTitle">Imagenes cargadas</h3>
               <span id="imageCount">0 imagenes</span>
             </div>
-            <div class="empty-grid" id="emptyGrid">Aun no hay imagenes. Toca Tomar foto o Cargar imagenes.</div>
+            <div class="empty-grid" id="emptyGrid">Aun no hay imagenes. Toca una foto requerida, Tomar foto o Cargar de galeria.</div>
             <div class="thumb-grid" id="thumbGrid" aria-live="polite"></div>
-          </section>
-
-          <section class="details-section" id="detailsPanel" aria-labelledby="detailsTitle" hidden>
-            <div class="thumb-header">
-              <h3 id="detailsTitle">Completar datos</h3>
-              <span id="detailsStatus">Autoguardado</span>
-            </div>
-            <div class="details-grid">
-              <label class="field">
-                <span>Tipo de servicio</span>
-                <input id="serviceType" placeholder="Abogado, grua o ambos">
-              </label>
-              <label class="field">
-                <span>Fecha y hora</span>
-                <input id="serviceDate" type="datetime-local">
-              </label>
-              <label class="field">
-                <span>Ciudad</span>
-                <input id="city" placeholder="Ciudad de la atencion">
-              </label>
-              <label class="field">
-                <span>Ubicacion</span>
-                <input id="location" placeholder="Direccion o referencia">
-              </label>
-              <label class="field">
-                <span>Responsable</span>
-                <input id="provider" placeholder="Analista, abogado, grua o aliado">
-              </label>
-              <label class="field">
-                <span>Contacto</span>
-                <input id="contact" placeholder="Telefono o correo">
-              </label>
-            </div>
-            <label class="field">
-              <span>Observaciones</span>
-              <textarea id="notes" rows="3" placeholder="Dano, entorno, documentos pendientes o comentario breve."></textarea>
-            </label>
           </section>
         </form>
 
-        <aside class="panel search-panel" id="searchPanel">
+        <section class="panel details-panel screen" id="detailsPanel" aria-labelledby="detailsTitle" hidden>
+          <div class="panel-title compact">
+            <div>
+              <p class="eyebrow">Datos faltantes</p>
+              <h3 id="detailsTitle">Completar datos</h3>
+            </div>
+            <span id="detailsStatus">Autoguardado</span>
+          </div>
+          <div class="details-grid">
+            <label class="field">
+              <span>Tipo de servicio</span>
+              <input id="serviceType" placeholder="Abogado, grua o ambos">
+            </label>
+            <label class="field">
+              <span>Fecha y hora</span>
+              <input id="serviceDate" type="datetime-local">
+            </label>
+            <label class="field">
+              <span>Ciudad</span>
+              <input id="city" placeholder="Ciudad de la atencion">
+            </label>
+            <label class="field">
+              <span>Ubicacion</span>
+              <input id="location" placeholder="Direccion o referencia">
+            </label>
+            <label class="field">
+              <span>Responsable</span>
+              <input id="provider" placeholder="Analista, abogado, grua o aliado">
+            </label>
+            <label class="field">
+              <span>Contacto</span>
+              <input id="contact" placeholder="Telefono o correo">
+            </label>
+          </div>
+          <label class="field">
+            <span>Observaciones</span>
+            <textarea id="notes" rows="3" placeholder="Dano, entorno, documentos pendientes o comentario breve."></textarea>
+          </label>
+          <div class="nav-actions">
+            <button class="button secondary" id="backToCaptureFromDetails" type="button">Volver a fotos</button>
+          </div>
+        </section>
+
+        <aside class="panel search-panel screen" id="searchPanel" hidden>
           <div class="panel-title compact">
             <div>
               <p class="eyebrow">Consulta</p>
               <h2>Buscar caso</h2>
             </div>
+            <button class="button secondary" id="backToCaptureFromSearch" type="button">Volver</button>
           </div>
           <label class="field">
             <span>Asistencia o placa</span>

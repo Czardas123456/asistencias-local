@@ -4,8 +4,11 @@ const STORE = "records";
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 const MAX_CASE_BYTES = 300 * 1024 * 1024;
 const MAX_IMAGES = 60;
+const RECENT_RECORD_DAYS = 30;
+const RECENT_RECORD_WINDOW = RECENT_RECORD_DAYS * 24 * 60 * 60 * 1000;
 
 const form = document.querySelector("#caseForm");
+const capturePanel = document.querySelector("#caseForm");
 const assistanceNumber = document.querySelector("#assistanceNumber");
 const plate = document.querySelector("#plate");
 const serviceType = document.querySelector("#serviceType");
@@ -30,6 +33,8 @@ const activeCase = document.querySelector("#activeCase");
 const statusBox = document.querySelector("#status");
 const searchPanel = document.querySelector("#searchPanel");
 const showSearch = document.querySelector("#showSearch");
+const backToCaptureFromDetails = document.querySelector("#backToCaptureFromDetails");
+const backToCaptureFromSearch = document.querySelector("#backToCaptureFromSearch");
 const searchQuery = document.querySelector("#searchQuery");
 const records = document.querySelector("#records");
 
@@ -112,6 +117,28 @@ function findCurrentRecord() {
   ));
 }
 
+function isRecentRecord(record) {
+  const timestamp = Date.parse(record.updatedAt || record.createdAt || "");
+  if (!Number.isFinite(timestamp)) return false;
+  const age = Date.now() - timestamp;
+  return age >= 0 && age <= RECENT_RECORD_WINDOW;
+}
+
+function findRecentIdentityRecord() {
+  const assistance = normalize(assistanceNumber.value).toUpperCase();
+  const currentPlate = normalizePlate(plate.value);
+  if (!assistance && !currentPlate) return null;
+
+  return savedRecords
+    .filter((record) => {
+      if (record.id === currentId || !isRecentRecord(record)) return false;
+      const matchesAssistance = assistance && record.assistanceNumber.toUpperCase() === assistance;
+      const matchesPlate = currentPlate && record.plate === currentPlate;
+      return matchesAssistance || matchesPlate;
+    })
+    .sort((a, b) => Date.parse(b.updatedAt || b.createdAt || "") - Date.parse(a.updatedAt || a.createdAt || ""))[0] || null;
+}
+
 function validateIdentity() {
   const fields = [
     [assistanceNumber, "Ingresa asistencia."],
@@ -134,9 +161,23 @@ function focusMissingIdentity() {
   target.closest(".field").scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
-function setDetailsVisible(visible) {
-  detailsPanel.hidden = !visible;
-  goDetails.setAttribute("aria-expanded", String(visible));
+function showScreen(screen, options = {}) {
+  const { scroll = true } = options;
+  capturePanel.hidden = screen !== "capture";
+  detailsPanel.hidden = screen !== "details";
+  searchPanel.hidden = screen !== "search";
+  goDetails.setAttribute("aria-expanded", String(screen === "details"));
+  if (scroll) window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function maybePreloadRecentRecord() {
+  const match = findRecentIdentityRecord();
+  if (!match) return false;
+  writeRecord(match);
+  validateIdentity();
+  showScreen("capture", { scroll: false });
+  setStatus(`Caso precargado: ${match.assistanceNumber} · ${match.plate}.`, "success");
+  return true;
 }
 
 function readRecord() {
@@ -174,7 +215,6 @@ function writeRecord(record) {
   moveToNextMissingPhoto();
   updateCaseLabel();
   renderImages();
-  setDetailsVisible(false);
 }
 
 function updateCaseLabel() {
@@ -264,6 +304,12 @@ function renderPhotoGuide() {
     button.addEventListener("click", () => {
       currentPhotoIndex = index;
       renderPhotoGuide();
+      if (!validateIdentity()) {
+        setStatus("Primero ingresa asistencia y placa.", "error");
+        focusMissingIdentity();
+        return;
+      }
+      photoInput.click();
     });
     photoChecklist.append(button);
   });
@@ -298,7 +344,7 @@ function validateFiles(files) {
   return { accepted, rejected };
 }
 
-async function addImages(fileList) {
+async function addImages(fileList, source = "camera") {
   if (!validateIdentity()) {
     setStatus("Primero ingresa asistencia y placa.", "error");
     focusMissingIdentity();
@@ -309,7 +355,7 @@ async function addImages(fileList) {
   if (rejected.length) alert(`No se cargaron algunas imagenes:\n${rejected.join("\n")}`);
   if (!accepted.length) return;
 
-  const mapped = accepted.map((file) => {
+  const mapped = accepted.map((file, index) => {
     const photo = REQUIRED_PHOTOS[currentPhotoIndex] || REQUIRED_PHOTOS[0];
     const item = {
       id: createId(),
@@ -318,7 +364,8 @@ async function addImages(fileList) {
       size: file.size,
       lastModified: file.lastModified,
       photoId: photo.id,
-      photoTitle: photo.title,
+      photoTitle: source === "gallery" ? `Galeria - evidencia ${index + 1}` : photo.title,
+      source,
       blob: file,
     };
 
@@ -330,7 +377,9 @@ async function addImages(fileList) {
   renderImages();
   const summary = getPhotoSummary();
   const nextText = summary.remaining ? ` Siguiente: ${currentPhotoTitle.textContent}.` : " Fotos requeridas completas.";
-  await persistCase(`${mapped.length} imagen${mapped.length === 1 ? "" : "es"} guardada${mapped.length === 1 ? "" : "s"}.${nextText}`);
+  const originText = source === "gallery" ? " de galeria" : "";
+  const okText = source === "gallery" ? ` Se marcaron ${mapped.length} foto${mapped.length === 1 ? "" : "s"} como OK.` : "";
+  await persistCase(`${mapped.length} imagen${mapped.length === 1 ? "" : "es"}${originText} guardada${mapped.length === 1 ? "" : "s"}.${okText}${nextText}`);
 }
 
 async function refreshRecords() {
@@ -391,8 +440,8 @@ function renderRecords() {
     open.textContent = "Abrir";
     open.addEventListener("click", () => {
       writeRecord(record);
+      showScreen("capture");
       setStatus("Caso abierto. Puedes agregar mas imagenes.", "success");
-      window.scrollTo({ top: 0, behavior: "smooth" });
     });
 
     card.append(title, meta, open);
@@ -401,12 +450,12 @@ function renderRecords() {
 }
 
 photoInput.addEventListener("change", async (event) => {
-  await addImages(event.target.files);
+  await addImages(event.target.files, "camera");
   event.target.value = "";
 });
 
 galleryInput.addEventListener("change", async (event) => {
-  await addImages(event.target.files);
+  await addImages(event.target.files, "gallery");
   event.target.value = "";
 });
 
@@ -421,16 +470,24 @@ goDetails.addEventListener("click", () => {
     focusMissingIdentity();
     return;
   }
-  setDetailsVisible(true);
+  showScreen("details");
   scheduleSave("Caso creado. Completa los datos faltantes.");
-  detailsPanel.scrollIntoView({ behavior: "smooth", block: "start" });
   serviceType.focus();
 });
 
 searchQuery.addEventListener("input", renderRecords);
 showSearch.addEventListener("click", () => {
-  searchPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+  showScreen("search");
+  renderRecords();
   searchQuery.focus();
+});
+
+backToCaptureFromDetails.addEventListener("click", () => {
+  showScreen("capture");
+});
+
+backToCaptureFromSearch.addEventListener("click", () => {
+  showScreen("capture");
 });
 
 [assistanceNumber, plate, serviceType, serviceDate, city, locationInput, provider, contact, notes].forEach((input) => {
@@ -438,7 +495,8 @@ showSearch.addEventListener("click", () => {
     if (input === plate) plate.value = normalizePlate(plate.value);
     validateIdentity();
     updateCaseLabel();
-    scheduleSave();
+    const preloaded = input === assistanceNumber || input === plate ? maybePreloadRecentRecord() : false;
+    if (!preloaded) scheduleSave();
   });
 });
 
